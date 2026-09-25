@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if flash %}
+    <div class="alert alert-{{ 'ok' if flash_kind == 'ok' else 'error' }}">{{ flash }}</div>
+  {% endif %}
+
+  <section class="card">
+    <h2>Relay status</h2>
+    {% if not bot_enabled %}
+      <p><span class="badge badge-off">Bot disabled</span>
+         Set <code>DISCORD_BOT_TOKEN</code> to start relaying messages.</p>
+    {% elif bot_running %}
+      <p><span class="badge badge-ok">Connected</span> The bot is live and relaying messages.</p>
+    {% else %}
+      <p><span class="badge badge-warn">Connecting / disconnected</span>
+         The bot task is running but has not reported ready yet.</p>
+    {% endif %}
+    <p class="muted">{{ mapping_count }} mapping(s) stored in <code>{{ config_path }}</code>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Mappings</h2>
+    {% if mappings %}
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Source channel</th><th>Target webhook</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for m in mappings %}
+            <tr>
+              <td>{{ m.name or "—" }}</td>
+              <td class="mono">{{ m.source_channel_id }}</td>
+              <td class="mono" title="Masked for display; the full webhook token is never shown in the UI.">
+                {{ m.masked_url }}
+              </td>
+              <td>
+                <div class="actions">
+                  <form class="inline" method="post" action="/mappings/{{ m.id }}/test">
+                    <button class="btn btn-secondary" type="submit">Test</button>
+                  </form>
+                  <form class="inline" method="post" action="/mappings/{{ m.id }}/delete"
+                        onsubmit="return confirm('Delete this mapping?');">
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">No mappings yet. Add one below.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Add a mapping</h2>
+    <p class="muted">
+      Messages posted in the source channel are forwarded to the target webhook.
+      Enable Developer Mode in Discord to copy a channel ID, and create a webhook
+      under <em>Server Settings &rarr; Integrations &rarr; Webhooks</em>.
+    </p>
+    <form method="post" action="/mappings">
+      <label for="name">Label (optional)</label>
+      <input id="name" name="name" type="text" maxlength="64" placeholder="e.g. Announcements mirror">
+
+      <label for="source_channel_id">Source channel ID</label>
+      <input id="source_channel_id" name="source_channel_id" type="text" inputmode="numeric"
+             required placeholder="e.g. 123456789012345678">
+
+      <label for="target_webhook_url">Target webhook URL</label>
+      <input id="target_webhook_url" name="target_webhook_url" type="text" required
+             placeholder="https://discord.com/api/webhooks/...">
+
+      <p style="margin-top:1rem">
+        <button class="btn btn-primary" type="submit">Add mapping</button>
+      </p>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Discord Relay{% endblock %}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f3f4f8;
+      color: #1f2430;
+      line-height: 1.5;
+    }
+    header { background: #4f46e5; color: #fff; padding: 1rem 0; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 0 1rem; }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    header p { margin: .15rem 0 0; font-size: .85rem; opacity: .85; }
+    main { padding: 1.5rem 0 3rem; }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+    }
+    h2 { margin: 0 0 .75rem; font-size: 1.05rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td {
+      padding: .6rem .5rem;
+      text-align: left;
+      border-bottom: 1px solid #eef0f4;
+      vertical-align: middle;
+    }
+    th {
+      color: #6b7280; font-weight: 600; font-size: .78rem;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    tr:last-child td { border-bottom: none; }
+    .mono, code {
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: .85rem;
+    }
+    .badge {
+      display: inline-block; padding: .15rem .6rem;
+      border-radius: 999px; font-size: .78rem; font-weight: 600;
+    }
+    .badge-ok { background: #dcfce7; color: #166534; }
+    .badge-warn { background: #fef9c3; color: #854d0e; }
+    .badge-off { background: #e5e7eb; color: #4b5563; }
+    .alert {
+      border-radius: 8px; padding: .7rem 1rem; margin-bottom: 1.25rem;
+      font-size: .9rem; border: 1px solid;
+    }
+    .alert-ok { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .alert-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    form.inline { display: inline; }
+    .actions { display: flex; gap: .4rem; }
+    .btn {
+      cursor: pointer; border: none; border-radius: 8px;
+      padding: .45rem .8rem; font-size: .85rem; font-weight: 600;
+    }
+    .btn:hover { filter: brightness(.96); }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-secondary { background: #eef0ff; color: #3730a3; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; }
+    label {
+      display: block; font-size: .85rem; font-weight: 600;
+      margin: .7rem 0 .2rem; color: #374151;
+    }
+    input[type="text"] {
+      width: 100%; padding: .55rem .7rem;
+      border: 1px solid #d1d5db; border-radius: 8px; font-size: .92rem;
+    }
+    input[type="text"]:focus { outline: 2px solid #4f46e5; border-color: #4f46e5; }
+    .muted { color: #6b7280; font-size: .85rem; }
+    .empty { padding: .5rem 0; text-align: center; color: #6b7280; }
+    footer { text-align: center; color: #9ca3af; font-size: .8rem; padding-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Discord Relay</h1>
+      <p>Forward channel messages to webhooks &mdash; no restart required.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Configuration is persisted as JSON and survives container restarts.</footer>
+</body>
+</html>

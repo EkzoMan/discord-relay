@@ -1,0 +1,17 @@
+# VCS
+.git
+
+# Virtual env
+.venv
+
+# Python artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets & local data — bake config via env, never the build context
+.env
+data/
+
+# Tests (keep image lean)
+tests/
