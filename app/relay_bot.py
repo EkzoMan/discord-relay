@@ -42,9 +42,12 @@ class RelayClient(discord.Client):
         *,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
-        # ``message_content`` is a privileged intent: it must also be
-        # enabled for the bot in the Discord developer portal.
-        intents = discord.Intents(guilds=True, message_content=True)
+        # ``guilds`` delivers guild/channel/role events; ``messages`` is the
+        # subscription that actually makes the gateway send MESSAGE_CREATE
+        # (on_message never fires without it).  ``message_content`` only
+        # unmasks message text and is privileged: it must also be enabled for
+        # the bot in the Discord developer portal.
+        intents = discord.Intents(guilds=True, messages=True, guild_messages=True, message_content=True)
         super().__init__(intents=intents)
         self._store = store
         self._settings = settings
