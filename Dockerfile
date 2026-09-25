@@ -3,6 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    RELAY_DB_PATH=/data/relay.db \
     RELAY_CONFIG_PATH=/data/config.json
 
 # Non-root runtime user.
@@ -16,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-# Persistent config location (mount a volume here).
+# Persistent data location: SQLite DB (users/sessions/relays) + legacy config.
 RUN mkdir -p /data && chown -R relay:relay /data /srv/discord_relay
 
 USER relay

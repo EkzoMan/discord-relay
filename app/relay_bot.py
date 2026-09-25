@@ -9,7 +9,7 @@ import discord
 import httpx
 
 from .settings import Settings
-from .store import ConfigStore
+from .store import RelayStore
 from .webhooks import DEFAULT_TIMEOUT, send_to_webhook
 
 logger = logging.getLogger(__name__)
@@ -33,11 +33,11 @@ def build_relay_content(content: str | None, attachment_urls: Sequence[str]) -> 
 
 class RelayClient(discord.Client):
     """A bare ``discord.Client`` (no commands framework) that forwards
-    messages according to the mappings held in a :class:`ConfigStore`."""
+    messages according to the mappings held in a :class:`RelayStore`."""
 
     def __init__(
         self,
-        store: ConfigStore,
+        store: RelayStore,
         settings: Settings,
         *,
         http_client: httpx.AsyncClient | None = None,
@@ -73,12 +73,14 @@ class RelayClient(discord.Client):
             logger.debug("Ignoring bot message id=%s (RELAY_ALLOW_BOT_MESSAGES is off)", message.id)
             return
         if message.webhook_id is not None:
-            # Likely our own webhook post bouncing back — ignore to prevent loops.
+            # Likely a webhook post bouncing back — ignore to prevent loops.
             logger.debug("Ignoring webhook message id=%s to avoid relay loops", message.id)
             return
 
-        mapping = self._store.get_by_channel(message.channel.id)
-        if mapping is None:
+        # Several users may each relay the same source channel; every mapping
+        # gets its own webhook copy.
+        mappings = self._store.get_all_by_channel(message.channel.id)
+        if not mappings:
             return
 
         text = build_relay_content(
@@ -91,32 +93,42 @@ class RelayClient(discord.Client):
         username = message.author.display_name or message.author.name
         avatar_url = message.author.display_avatar.url
 
-        ok = await send_to_webhook(
-            mapping.target_webhook_url,
-            username=username,
-            avatar_url=avatar_url,
-            content=text,
-            http_client=self._http,
-        )
-        # The webhook URL itself is never logged (it embeds a secret token).
-        if ok:
-            logger.info(
-                "Relayed message %s from channel %s via mapping %s",
-                message.id,
-                message.channel.id,
-                mapping.id[:8],
-            )
-        else:
-            logger.warning(
-                "Failed to relay message %s from channel %s via mapping %s",
-                message.id,
-                message.channel.id,
-                mapping.id[:8],
-            )
+        for mapping in mappings:
+            try:
+                ok = await send_to_webhook(
+                    mapping.target_webhook_url,
+                    username=username,
+                    avatar_url=avatar_url,
+                    content=text,
+                    http_client=self._http,
+                )
+            except Exception:
+                # One broken mapping must not stop the others.
+                ok = False
+                logger.exception(
+                    "Unexpected error relaying message %s via mapping %s",
+                    message.id,
+                    mapping.id[:8],
+                )
+            # The webhook URL itself is never logged (it embeds a secret token).
+            if ok:
+                logger.info(
+                    "Relayed message %s from channel %s via mapping %s",
+                    message.id,
+                    message.channel.id,
+                    mapping.id[:8],
+                )
+            else:
+                logger.warning(
+                    "Failed to relay message %s from channel %s via mapping %s",
+                    message.id,
+                    message.channel.id,
+                    mapping.id[:8],
+                )
 
 
 async def run_relay_bot(
-    store: ConfigStore,
+    store: RelayStore,
     settings: Settings,
     *,
     client: RelayClient | None = None,

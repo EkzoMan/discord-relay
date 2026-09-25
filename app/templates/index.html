@@ -6,42 +6,43 @@
   {% endif %}
 
   <section class="card">
-    <h2>Relay status</h2>
+    <h2>Статус</h2>
     {% if not bot_enabled %}
-      <p><span class="badge badge-off">Bot disabled</span>
-         Set <code>DISCORD_BOT_TOKEN</code> to start relaying messages.</p>
+      <p><span class="badge badge-off">Бот выключен</span>
+         Укажите <code>DISCORD_BOT_TOKEN</code>, чтобы пересылка сообщений заработала.</p>
     {% elif bot_running %}
-      <p><span class="badge badge-ok">Connected</span> The bot is live and relaying messages.</p>
+      <p><span class="badge badge-ok">Подключён</span> Бот в сети и пересылает сообщения.</p>
     {% else %}
-      <p><span class="badge badge-warn">Connecting / disconnected</span>
-         The bot task is running but has not reported ready yet.</p>
+      <p><span class="badge badge-warn">Подключение / нет соединения</span>
+         Задача бота запущена, но статус «ready» ещё не получен.</p>
     {% endif %}
-    <p class="muted">{{ mapping_count }} mapping(s) stored in <code>{{ config_path }}</code>.</p>
+    <p class="muted">Ваших релеев: {{ mapping_count }}{% if user.role == "admin" %}
+       &middot; Всего релеев у всех пользователей: {{ total_count }}{% endif %}.</p>
   </section>
 
   <section class="card">
-    <h2>Mappings</h2>
+    <h2>Мои релеи</h2>
     {% if mappings %}
       <table>
         <thead>
-          <tr><th>Name</th><th>Source channel</th><th>Target webhook</th><th>Actions</th></tr>
+          <tr><th>Название</th><th>Исходный канал</th><th>Целевой вебхук</th><th>Действия</th></tr>
         </thead>
         <tbody>
           {% for m in mappings %}
             <tr>
               <td>{{ m.name or "—" }}</td>
               <td class="mono">{{ m.source_channel_id }}</td>
-              <td class="mono" title="Masked for display; the full webhook token is never shown in the UI.">
+              <td class="mono" title="Маскируется для отображения; полный токен вебхука в UI не показывается.">
                 {{ m.masked_url }}
               </td>
               <td>
                 <div class="actions">
                   <form class="inline" method="post" action="/mappings/{{ m.id }}/test">
-                    <button class="btn btn-secondary" type="submit">Test</button>
+                    <button class="btn btn-secondary" type="submit">Тест</button>
                   </form>
                   <form class="inline" method="post" action="/mappings/{{ m.id }}/delete"
-                        onsubmit="return confirm('Delete this mapping?');">
-                    <button class="btn btn-danger" type="submit">Delete</button>
+                        onsubmit="return confirm('Удалить это реле?');">
+                    <button class="btn btn-danger" type="submit">Удалить</button>
                   </form>
                 </div>
               </td>
@@ -50,31 +51,70 @@
         </tbody>
       </table>
     {% else %}
-      <p class="empty">No mappings yet. Add one below.</p>
+      <p class="empty">Пока нет релеев. Добавьте ниже.</p>
     {% endif %}
   </section>
 
+  {% if user.role == "admin" %}
   <section class="card">
-    <h2>Add a mapping</h2>
+    <h2>Все релеи пользователей</h2>
+    {% if all_mappings %}
+      <table>
+        <thead>
+          <tr><th>Владелец</th><th>Название</th><th>Исходный канал</th>
+              <th>Целевой вебхук</th><th>Действия</th></tr>
+        </thead>
+        <tbody>
+          {% for m in all_mappings %}
+            <tr>
+              <td><b>{{ m.owner_username }}</b>{% if m.owner_user_id == user.id %} <span class="muted">(вы)</span>{% endif %}</td>
+              <td>{{ m.name or "—" }}</td>
+              <td class="mono">{{ m.source_channel_id }}</td>
+              <td class="mono" title="Маскируется для отображения; полный токен вебхука в UI не показывается.">
+                {{ m.masked_url }}
+              </td>
+              <td>
+                <div class="actions">
+                  <form class="inline" method="post" action="/mappings/{{ m.id }}/test">
+                    <button class="btn btn-secondary" type="submit">Тест</button>
+                  </form>
+                  <form class="inline" method="post" action="/mappings/{{ m.id }}/delete"
+                        onsubmit="return confirm('Удалить это реле?');">
+                    <button class="btn btn-danger" type="submit">Удалить</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">Ни у кого нет релеев.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Добавить реле</h2>
     <p class="muted">
-      Messages posted in the source channel are forwarded to the target webhook.
-      Enable Developer Mode in Discord to copy a channel ID, and create a webhook
-      under <em>Server Settings &rarr; Integrations &rarr; Webhooks</em>.
+      Сообщения в исходном канале пересылаются в целевой вебхук. Включите
+      «Режим разработчика» в Discord, чтобы скопировать ID канала, и создайте
+      вебхук в <em>Настройки сервера &rarr; Интеграции &rarr; Вебхуки</em>.
     </p>
     <form method="post" action="/mappings">
-      <label for="name">Label (optional)</label>
-      <input id="name" name="name" type="text" maxlength="64" placeholder="e.g. Announcements mirror">
+      <label for="name">Название (необязательно)</label>
+      <input id="name" name="name" type="text" maxlength="64" placeholder="Например: Зеркало анонсов">
 
-      <label for="source_channel_id">Source channel ID</label>
+      <label for="source_channel_id">ID исходного канала</label>
       <input id="source_channel_id" name="source_channel_id" type="text" inputmode="numeric"
-             required placeholder="e.g. 123456789012345678">
+             required placeholder="Например: 123456789012345678">
 
-      <label for="target_webhook_url">Target webhook URL</label>
+      <label for="target_webhook_url">URL целевого вебхука</label>
       <input id="target_webhook_url" name="target_webhook_url" type="text" required
              placeholder="https://discord.com/api/webhooks/...">
 
       <p style="margin-top:1rem">
-        <button class="btn btn-primary" type="submit">Add mapping</button>
+        <button class="btn btn-primary" type="submit">Добавить реле</button>
       </p>
     </form>
   </section>

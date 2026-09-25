@@ -7,7 +7,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Named volume keeps config.json across container restarts.
+      # Named volume keeps relay.db (and the legacy config.json) across
+      # container restarts and redeploys.
       - relay-config:/data
     restart: unless-stopped
 
