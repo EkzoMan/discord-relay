@@ -134,7 +134,7 @@ async def run_relay_bot(
     try:
         # log_handler=None: keep discord.py from installing its own root
         # handler; the app configures logging from RELAY_LOG_LEVEL instead.
-        await relay_client.start(settings.discord_bot_token, log_handler=None)
+        await relay_client.start(settings.discord_bot_token)
     except discord.LoginFailure:
         logger.error("Discord rejected DISCORD_BOT_TOKEN; the relay bot is not running.")
     except discord.DiscordException:
