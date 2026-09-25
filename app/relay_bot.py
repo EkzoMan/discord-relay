@@ -72,7 +72,7 @@ class RelayClient(discord.Client):
         if not self._settings.allow_bot_messages and message.author.bot:
             logger.debug("Ignoring bot message id=%s (RELAY_ALLOW_BOT_MESSAGES is off)", message.id)
             return
-        if message.webhook_id is not None:
+        if not self._settings.allow_webhook_messages and message.webhook_id is not None:
             # Likely a webhook post bouncing back — ignore to prevent loops.
             logger.debug("Ignoring webhook message id=%s to avoid relay loops", message.id)
             return

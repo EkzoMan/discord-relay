@@ -111,7 +111,7 @@ class Settings:
     #: Length of the failure-counting window *and* the lockout duration,
     #: in minutes.
     login_lockout_minutes: int = 15
-
+    allow_webhook_messages: bool = True
     @property
     def auth_required(self) -> bool:
         """Login is always required now (session-based multi-user auth).
