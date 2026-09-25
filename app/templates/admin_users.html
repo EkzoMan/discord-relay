@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель — Discord Relay{% endblock %}
+
+{% block content %}
+  {% if flash %}
+    <div class="alert alert-{{ 'ok' if flash_kind == 'ok' else 'error' }}">{{ flash }}</div>
+  {% endif %}
+
+  <section class="card">
+    <h2>Создать пользователя</h2>
+    <form method="post" action="/admin/users">
+      <label for="username">Логин</label>
+      <input id="username" name="username" type="text" required maxlength="32"
+             placeholder="Например: bob">
+
+      <label for="password">Пароль (минимум 8 символов)</label>
+      <input id="password" name="password" type="password" required minlength="8"
+             autocomplete="new-password">
+
+      <label for="role">Роль</label>
+      <select id="role" name="role">
+        <option value="user">Пользователь</option>
+        <option value="admin">Администратор</option>
+      </select>
+
+      <p style="margin-top:1rem">
+        <button class="btn btn-primary" type="submit">Создать</button>
+      </p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Пользователи</h2>
+    <table>
+      <thead>
+        <tr><th>Логин</th><th>Роль</th><th>Статус</th><th>Создан</th><th>Действия</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td><b>{{ u.username }}</b>{% if u.id == user.id %} <span class="muted">(вы)</span>{% endif %}</td>
+            <td>{{ "админ" if u.role == "admin" else "пользователь" }}</td>
+            <td>
+              {% if u.active %}
+                <span class="badge badge-ok">Активен</span>
+              {% else %}
+                <span class="badge badge-off">Отключён</span>
+              {% endif %}
+            </td>
+            <td class="mono">{{ u.created_at }}</td>
+            <td>
+              <div class="actions">
+                <form class="inline" method="post" action="/admin/users/{{ u.id }}/toggle-active">
+                  <button class="btn btn-secondary" type="submit">
+                    {{ "Отключить" if u.active else "Включить" }}
+                  </button>
+                </form>
+                <form class="inline actions" method="post" action="/admin/users/{{ u.id }}/reset-password">
+                  <input type="password" name="password" placeholder="Новый пароль"
+                         minlength="8" required style="width:160px"
+                         autocomplete="new-password">
+                  <button class="btn btn-secondary" type="submit">Сменить пароль</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <p class="muted"><a href="/">← Назад на панель</a></p>
+{% endblock %}

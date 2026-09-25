@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Вход — Discord Relay{% endblock %}
+
+{% block content %}
+  <section class="card login-card">
+    <h2>Вход</h2>
+    {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+    {% if flash %}
+      <div class="alert alert-{{ 'ok' if flash_kind == 'ok' else 'error' }}">{{ flash }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <label for="username">Логин</label>
+      <input id="username" name="username" type="text" required
+             autocomplete="username" autofocus>
+
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password" required
+             autocomplete="current-password">
+
+      <p style="margin-top:1rem">
+        <button class="btn btn-primary" type="submit">Войти</button>
+      </p>
+    </form>
+  </section>
+{% endblock %}
