@@ -9,6 +9,7 @@ status codes here.
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 
 import httpx
 
@@ -16,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 MAX_USERNAME_LENGTH = 80
 MAX_CONTENT_LENGTH = 2000
+#: Discord allows at most 10 embeds per webhook message.
+MAX_EMBEDS = 10
 DEFAULT_TIMEOUT = 10.0
 
 
@@ -25,12 +28,16 @@ async def send_to_webhook(
     username: str,
     avatar_url: str | None,
     content: str,
+    embeds: Sequence[dict] | None = None,
     http_client: httpx.AsyncClient | None = None,
 ) -> bool:
     """POST a message to a Discord webhook. Returns True on a 2xx response.
 
     ``http_client`` lets callers share a connection pool; when omitted a
     short-lived client is created and closed for this single request.
+    ``embeds`` (already sanitized webhook-shaped dicts, see
+    ``relay_bot.collect_relay_embeds``) are forwarded verbatim — feed bots
+    keep all their content in embeds, not in ``content``.
     """
     payload = {
         "username": (username or "Unknown")[:MAX_USERNAME_LENGTH],
@@ -39,6 +46,8 @@ async def send_to_webhook(
         # Never resolve mentions/roles/everyone pings from relayed content.
         "allowed_mentions": {"parse": []},
     }
+    if embeds:
+        payload["embeds"] = list(embeds)[:MAX_EMBEDS]
 
     owns_client = http_client is None
     client = http_client or httpx.AsyncClient(timeout=DEFAULT_TIMEOUT)
