@@ -146,6 +146,7 @@ def load_settings() -> Settings:
         ui_username=legacy_username,
         ui_password=legacy_password,
         allow_bot_messages=_env_bool("RELAY_ALLOW_BOT_MESSAGES", False),
+        allow_webhook_messages=_env_bool("RELAY_ALLOW_WEBHOOK_MESSAGES", False),
         log_level=(_env_str("RELAY_LOG_LEVEL", "INFO") or "INFO").upper(),
         admin_username=admin_username,
         admin_password=admin_password,
