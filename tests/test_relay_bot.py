@@ -347,3 +347,69 @@ async def test_webhook_feed_message_relayed_when_allowed(store, settings):
     client_open = make_client(store, permissive, fake_open)
     await client_open._relay_message(zkb)
     assert fake_open.calls == [URL_A]
+
+
+# --------------------------------------------------------------------------- #
+# RELAY_ALLOW_EMBEDS toggle
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.asyncio
+async def test_embed_only_message_not_relayed_when_embeds_disabled(store, settings):
+    """allow_embeds=False: an embed-only feed message has empty content and
+    no forwarded embeds -> nothing relayable, nothing is sent."""
+    alice = store.create_user("alice", "alice-password-1")
+    store.add_mapping(
+        RelayMapping(source_channel_id=CHANNEL, target_webhook_url=URL_A,
+                     owner_user_id=alice.id)
+    )
+    no_embeds = dataclasses.replace(settings, allow_embeds=False)
+    fake = FakeHttpClient()
+    client = make_client(store, no_embeds, fake)
+
+    await client._relay_message(fake_message(content="", embeds=[FakeEmbed(ZKB_EMBED)]))
+
+    assert fake.calls == []
+
+
+@pytest.mark.asyncio
+async def test_text_message_relayed_without_embeds_when_disabled(store, settings):
+    """allow_embeds=False does not suppress normal text messages - but the
+    webhook payload must NOT carry the forwarded embeds."""
+    alice = store.create_user("alice", "alice-password-1")
+    store.add_mapping(
+        RelayMapping(source_channel_id=CHANNEL, target_webhook_url=URL_A,
+                     owner_user_id=alice.id)
+    )
+    no_embeds = dataclasses.replace(settings, allow_embeds=False)
+    fake = FakeHttpClient()
+    client = make_client(store, no_embeds, fake)
+
+    await client._relay_message(
+        fake_message(content="hello", embeds=[FakeEmbed(ZKB_EMBED)])
+    )
+
+    assert len(fake.calls) == 1
+    assert fake.payloads[0]["content"] == "hello"
+    assert "embeds" not in fake.payloads[0]
+
+
+@pytest.mark.asyncio
+async def test_default_settings_relay_embeds(store, settings):
+    """The settings fixture builds Settings() directly (not via the env
+    loader): the dataclass default must be True so embed-only messages keep
+    relaying by default (guards the dataclass-vs-loader consistency rule)."""
+    assert settings.allow_embeds is True
+
+    alice = store.create_user("alice", "alice-password-1")
+    store.add_mapping(
+        RelayMapping(source_channel_id=CHANNEL, target_webhook_url=URL_A,
+                     owner_user_id=alice.id)
+    )
+    fake = FakeHttpClient()
+    client = make_client(store, settings, fake)
+
+    await client._relay_message(fake_message(content="", embeds=[FakeEmbed(ZKB_EMBED)]))
+
+    assert fake.calls == [URL_A]
+    assert fake.payloads[0]["embeds"]

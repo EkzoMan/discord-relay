@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.settings import load_settings
+from app.settings import Settings, load_settings
 
 _VARS = (
     "ADMIN_USERNAME",
@@ -20,6 +20,7 @@ _VARS = (
     "UI_PASSWORD",
     "RELAY_CONFIG_PATH",
     "DISCORD_BOT_TOKEN",
+    "RELAY_ALLOW_EMBEDS",
 )
 
 
@@ -100,3 +101,14 @@ def test_session_cookie_secure_bad_value_falls_back_to_auto(monkeypatch):
     """A typo must not crash startup nor silently disable the Secure flag."""
     monkeypatch.setenv("SESSION_COOKIE_SECURE", "sometimes")
     assert load_settings().session_cookie_secure == "auto"
+
+
+def test_allow_embeds_loader_default_matches_dataclass(monkeypatch):
+    """Loader default and dataclass default MUST be identical (True): a
+    mismatch silently changes behavior for direct Settings() construction."""
+    monkeypatch.delenv("RELAY_ALLOW_EMBEDS", raising=False)
+    assert load_settings().allow_embeds is True
+    assert Settings.__dataclass_fields__["allow_embeds"].default is True
+    # Explicit opt-out works like the other relay flags.
+    monkeypatch.setenv("RELAY_ALLOW_EMBEDS", "false")
+    assert load_settings().allow_embeds is False

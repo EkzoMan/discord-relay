@@ -112,6 +112,11 @@ class Settings:
     #: in minutes.
     login_lockout_minutes: int = 15
     allow_webhook_messages: bool = False
+    #: When False, embeds attached to messages are never forwarded: only text
+    #: and attachments relay (embed-only feed messages then have nothing
+    #: relayable and are skipped).
+    allow_embeds: bool = True
+
     @property
     def auth_required(self) -> bool:
         """Login is always required now (session-based multi-user auth).
@@ -147,6 +152,7 @@ def load_settings() -> Settings:
         ui_password=legacy_password,
         allow_bot_messages=_env_bool("RELAY_ALLOW_BOT_MESSAGES", False),
         allow_webhook_messages=_env_bool("RELAY_ALLOW_WEBHOOK_MESSAGES", False),
+        allow_embeds=_env_bool("RELAY_ALLOW_EMBEDS", True),
         log_level=(_env_str("RELAY_LOG_LEVEL", "INFO") or "INFO").upper(),
         admin_username=admin_username,
         admin_password=admin_password,

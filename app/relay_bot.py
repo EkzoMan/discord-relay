@@ -198,7 +198,8 @@ class RelayClient(discord.Client):
         text = build_relay_content(
             message.content, [attachment.url for attachment in message.attachments]
         )
-        embeds = collect_relay_embeds(message)
+        # RELAY_ALLOW_EMBEDS=false: forward text/attachments only, never embeds.
+        embeds = collect_relay_embeds(message) if self._settings.allow_embeds else []
         if not text and not embeds:
             logger.debug("Message id=%s has no relayable content", message.id)
             return
